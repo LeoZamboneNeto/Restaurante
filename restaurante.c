@@ -3,6 +3,10 @@
 
 #include<locale.h>
 
+int opcao = -1;
+int senha = 1;
+int senhaPreferencial = 1;
+
 struct Fila {
     int capacidade;
     int *dados;
@@ -57,29 +61,46 @@ void remover(struct Fila *f) {
     // return temp;
 }
 
+void mostrarFila(struct Fila *f) {
+    int cont, i;
+
+    for (cont = 0, i = f->primeiro; cont < f->nItens; cont++) {
+        if (f->dados[i] != 0 && f->dados[i] % 10 == 0){   }
+    }
+    printf("\n\n");
+}
+
+void mostrarFilas(struct Fila *fComum, struct Fila *fPreferencial) {
+    printf("Fila Comum: ");
+    for (int i = fComum->primeiro, cont = 0; cont < fComum->nItens; i = (i + 1) % fComum->capacidade, cont++) {
+        printf("C%d\t", fComum->dados[i]);
+    }
+    printf("\n");
+
+    printf("Fila Preferencial: ");
+    for (int i = fPreferencial->primeiro, cont = 0; cont < fPreferencial->nItens; i = (i + 1) % fPreferencial->capacidade, cont++) {
+        printf("P%d\t", fPreferencial->dados[i]);
+    }
+    printf("\n\n");
+}
+
 void menu() {
     printf("\n### MENU ###\n");
     printf("1 - Retirar senha\n");
     printf("2 - Retirar senha Preferencial\n");
+    printf("3 - Senha XXX Concluida\n");
     printf("0 - Sair\n\n");
     printf("Escolha uma opcao: ");
-}
-
-void mostrarFila(struct Fila *f){
-	int cont, i;
-	for ( cont=0, i= f->primeiro; cont < f->nItens; cont++){
-		printf("%i\t",f->dados[i++]);
-		if (i == f->capacidade)
-			i=0;
-}
-	printf("\n\n");
 }
 
 int main() {
     setlocale(LC_ALL, "Portuguese");
 
     struct Fila minhaFila;
+    struct Fila minhaFilaPreferencial;
+
     criarFila(&minhaFila, 5);
+    criarFila(&minhaFilaPreferencial, 5);
 
     int opcao = -1;
     int senha = 1;
@@ -96,18 +117,23 @@ int main() {
             case 0:{
                 printf("Saindo...\n");
                 break;}
-
+                 
             case 1:{
                 inserir(&minhaFila, senha);
                 printf("Senha %d, retirada com sucesso!\n", senha);
                 senha++;
+                 mostrarFilas(&minhaFila, &minhaFilaPreferencial);
                 break;}
-
+                  
             case 2:{
-                inserir(&minhaFila, senhaPreferencial);
+                inserir(&minhaFilaPreferencial, senhaPreferencial);
                 printf("Senha P%d retirada com sucesso!\n", senhaPreferencial);
                 senhaPreferencial++;
+                mostrarFilas(&minhaFila, &minhaFilaPreferencial);
                 break;}
+                
+            case 3:{ }         
+                
 
             default:
                 printf("Opção inválida!\n");
@@ -115,6 +141,7 @@ int main() {
 
 
             mostrarFila(&minhaFila);
+
 
 
 
