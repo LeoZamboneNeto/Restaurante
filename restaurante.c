@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include<locale.h>
+#include <locale.h>
 
 int opcao = -1;
 int senha = 1;
 int senhaPreferencial = 1;
 int tipoSenha = 0;
+
 
 struct Fila {
     int capacidade;
@@ -22,6 +24,37 @@ void criarFila(struct Fila *f, int c) {
     f->primeiro = 0;
     f->ultimo = -1;
     f->nItens = 0;
+}
+
+struct Prato{
+    char nome[50];
+    float preco;
+};
+
+struct Prato cardapio[5];
+
+struct Prato pratosInicio[5] = {
+        {"Lasanha", 25.00},
+        {"Salmão", 25.00},
+        {"Feijuca Campeã", 37.00},
+        {"Refrigerante", 7.00},
+        {"Suco", 7.00},
+};
+
+void inicializarCardapio(struct Prato *pratosIniciais) {
+    for (int i = 0; i < 5; i++) {
+        strcpy(cardapio[i].nome, (pratosIniciais + i)->nome);
+        cardapio[i].preco = (pratosIniciais + i)->preco;
+    }
+}
+
+void mostrarCardapio(struct Prato *pratos){
+    printf("\n## Cardápio ##\n");
+    for (int i = 0; i < 5; i++){
+        printf("Nome: %s \n", (pratos + i)->nome);
+        printf("Preço: R$%.2f\n\n",(pratos + i)->preco);
+    }
+
 }
 
 void liberarFila(struct Fila *f) {
@@ -99,19 +132,26 @@ void remover(struct Fila *fComum, struct Fila *fPreferencial, int tipoSenha) {
     }
 }
 
+
+
 void menu() {
     printf("\n### MENU ###\n");
     printf("1 - Retirar senha\n");
     printf("2 - Retirar senha Preferencial\n");
     printf("3 - Senha XXX Concluida\n");
+    printf("4 - Cardápio\n");
+
     printf("0 - Sair\n\n");
     printf("Escolha uma opcao: ");
 }
 
 void gerenciadorSenhas(){
 
+
+
     setlocale(LC_ALL, "Portuguese");
 
+    //definir struct, eu poderia ter feito isso globalmente
     struct Fila minhaFila;
     struct Fila minhaFilaPreferencial;
 
@@ -159,6 +199,14 @@ void gerenciadorSenhas(){
                  mostrarFilas(&minhaFila, &minhaFilaPreferencial);
                  break;}
 
+             case 4:{
+                 inicializarCardapio(pratosInicio);
+                 mostrarCardapio(pratosInicio);
+                 gerenciadorSenhas();
+
+
+             }
+
 
             default:
                 printf("Opção inválida!\n");
@@ -169,6 +217,8 @@ void gerenciadorSenhas(){
 }
 
 int main() {
+
+
  gerenciadorSenhas();
 
 return 0;}
