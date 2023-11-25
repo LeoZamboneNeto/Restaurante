@@ -6,6 +6,7 @@
 int opcao = -1;
 int senha = 1;
 int senhaPreferencial = 1;
+int tipoSenha = 0;
 
 struct Fila {
     int capacidade;
@@ -49,25 +50,13 @@ void inserir(struct Fila *f, int v) {
     adicionarCapacidade(f, v);
 }
 
-void remover(struct Fila *f) {
-    if (f->nItens == 0) {
-        printf("Fila vazia, não é possível remover.\n");
-        return;
-    }
-
-    int temp = f->dados[f->primeiro];
-    f->primeiro = (f->primeiro + 1) % f->capacidade;
-    f->nItens--;
-    // return temp;
-}
-
 void mostrarFila(struct Fila *f) {
     int cont, i;
 
     for (cont = 0, i = f->primeiro; cont < f->nItens; cont++) {
         if (f->dados[i] != 0 && f->dados[i] % 10 == 0){   }
     }
-    printf("\n\n");
+    printf("\n");
 }
 
 void mostrarFilas(struct Fila *fComum, struct Fila *fPreferencial) {
@@ -84,6 +73,32 @@ void mostrarFilas(struct Fila *fComum, struct Fila *fPreferencial) {
     printf("\n\n");
 }
 
+void remover(struct Fila *fComum, struct Fila *fPreferencial, int tipoSenha) {
+    if (tipoSenha == 1) {
+        if (fComum->nItens > 0) {
+            int senhaRemovida = fComum->dados[fComum->primeiro];
+            fComum->primeiro = (fComum->primeiro + 1) % fComum->capacidade;
+            fComum->nItens--;
+
+            printf("Senha comum removida com sucesso: C%d\n", senhaRemovida);
+        } else {
+            printf("Fila comum vazia, não é possível remover.\n");
+        }
+    } else if (tipoSenha == 2) {
+        if (fPreferencial->nItens > 0) {
+            int senhaRemovida = fPreferencial->dados[fPreferencial->primeiro];
+            fPreferencial->primeiro = (fPreferencial->primeiro + 1) % fPreferencial->capacidade;
+            fPreferencial->nItens--;
+
+            printf("Senha preferencial removida com sucesso: P%d\n", senhaRemovida);
+        } else {
+            printf("Fila preferencial vazia, não é possível remover.\n");
+        }
+    } else {
+        printf("Tipo de senha inválido!\n");
+    }
+}
+
 void menu() {
     printf("\n### MENU ###\n");
     printf("1 - Retirar senha\n");
@@ -93,7 +108,8 @@ void menu() {
     printf("Escolha uma opcao: ");
 }
 
-int main() {
+void gerenciadorSenhas(){
+
     setlocale(LC_ALL, "Portuguese");
 
     struct Fila minhaFila;
@@ -105,49 +121,54 @@ int main() {
     int opcao = -1;
     int senha = 1;
     int senhaPreferencial = 1;
+    int tipoSenha = 0;
 
 
-    //permanecer no loop
+
     while (opcao != 0) {
+
         menu();
         scanf("%d", &opcao);
-
 
         switch (opcao) {
             case 0:{
                 printf("Saindo...\n");
                 break;}
-                 
+
             case 1:{
                 inserir(&minhaFila, senha);
-                printf("Senha %d, retirada com sucesso!\n", senha);
+                printf("Senha %d, retirada com sucesso!\n\n", senha);
                 senha++;
-                 mostrarFilas(&minhaFila, &minhaFilaPreferencial);
+                mostrarFilas(&minhaFila, &minhaFilaPreferencial);
                 break;}
-                  
+
             case 2:{
                 inserir(&minhaFilaPreferencial, senhaPreferencial);
-                printf("Senha P%d retirada com sucesso!\n", senhaPreferencial);
+                printf("Senha P%d retirada com sucesso!\n\n", senhaPreferencial);
                 senhaPreferencial++;
                 mostrarFilas(&minhaFila, &minhaFilaPreferencial);
                 break;}
-                
-            case 3:{ }         
-                
+
+            case 3:{
+                 printf("Escolha o tipo de senha a ser removida:\n");
+                 printf("1 - Comum\n");
+                 printf("2 - Preferencial\n");
+                 scanf("%d", &tipoSenha);
+
+                 remover(&minhaFila, &minhaFilaPreferencial, tipoSenha);
+                 mostrarFilas(&minhaFila, &minhaFilaPreferencial);
+                 break;}
+
 
             default:
                 printf("Opção inválida!\n");
                 break;}
 
-
-            mostrarFila(&minhaFila);
-
-
-
-
-
-
-   // liberarFila(&minhaFila);
+}
 
 }
+
+int main() {
+ gerenciadorSenhas();
+
 return 0;}
