@@ -50,10 +50,34 @@ void inicializarCardapio(struct Prato *pratosIniciais) {
 
 void mostrarCardapio(struct Prato *pratos){
     printf("\n## Cardápio ##\n");
+
     for (int i = 0; i < 5; i++){
-        printf("Nome: %s \n", (pratos + i)->nome);
-        printf("Preço: R$%.2f\n\n",(pratos + i)->preco);
+            printf("%d - Nome: %s \n", i + 1, (pratos + i)->nome);
+            printf("Preço: R$%.2f\n\n",(pratos + i)->preco);
     }
+}
+
+void selecionarPratos(struct Prato *pratos) {
+    int escolha;
+    float subtotal = 0.0;
+
+    while (1) {
+        printf("Escolha o(s) prato(s) desejado(s) (digite 0 para voltar): ");
+        scanf("%d", &escolha);
+
+        if (escolha == 0) {
+            break; // Sai do loop se a escolha for 0
+        }
+
+        if (escolha < 1 || escolha > 5) {
+            printf("Opção inválida!\n");
+        } else {
+            printf("Prato escolhido: %s - R$%.2f\n", (pratos + escolha - 1)->nome, (pratos + escolha - 1)->preco);
+            subtotal += (pratos + escolha - 1)->preco;
+            printf("Subtotal: R$%.2f\n", subtotal);
+        }
+    }
+
 
 }
 
@@ -132,8 +156,6 @@ void remover(struct Fila *fComum, struct Fila *fPreferencial, int tipoSenha) {
     }
 }
 
-
-
 void menu() {
     printf("\n### MENU ###\n");
     printf("1 - Retirar senha\n");
@@ -146,8 +168,6 @@ void menu() {
 }
 
 void gerenciadorSenhas(){
-
-
 
     setlocale(LC_ALL, "Portuguese");
 
@@ -176,18 +196,24 @@ void gerenciadorSenhas(){
                 break;}
 
             case 1:{
-                inserir(&minhaFila, senha);
-                printf("Senha %d, retirada com sucesso!\n\n", senha);
-                senha++;
-                mostrarFilas(&minhaFila, &minhaFilaPreferencial);
-                break;}
+                    inserir(&minhaFila, senha);
+                    printf("Senha %d, retirada com sucesso!\n\n", senha);
+                    senha++;
+                    mostrarFilas(&minhaFila, &minhaFilaPreferencial);
+                    inicializarCardapio(pratosInicio);
+                    mostrarCardapio(pratosInicio);
+                    selecionarPratos(pratosInicio);
+                    break;}
 
             case 2:{
-                inserir(&minhaFilaPreferencial, senhaPreferencial);
-                printf("Senha P%d retirada com sucesso!\n\n", senhaPreferencial);
-                senhaPreferencial++;
-                mostrarFilas(&minhaFila, &minhaFilaPreferencial);
-                break;}
+                    inserir(&minhaFilaPreferencial, senhaPreferencial);
+                    printf("Senha P%d retirada com sucesso!\n\n", senhaPreferencial);
+                    senhaPreferencial++;
+                    mostrarFilas(&minhaFila, &minhaFilaPreferencial);
+                    inicializarCardapio(pratosInicio);
+                    mostrarCardapio(pratosInicio);
+                    selecionarPratos(pratosInicio);;
+                    break;}
 
             case 3:{
                  printf("Escolha o tipo de senha a ser removida:\n");
@@ -202,10 +228,8 @@ void gerenciadorSenhas(){
              case 4:{
                  inicializarCardapio(pratosInicio);
                  mostrarCardapio(pratosInicio);
-                 gerenciadorSenhas();
-
-
-             }
+                 selecionarPratos(pratosInicio);
+                 gerenciadorSenhas();}
 
 
             default:
@@ -217,7 +241,6 @@ void gerenciadorSenhas(){
 }
 
 int main() {
-
 
  gerenciadorSenhas();
 
