@@ -179,6 +179,7 @@ void daraHora(){
             strftime(buffer, sizeof(buffer), "%c", info);
             printf("\nData e hora do pedido: %s\n", buffer);
 }
+
 void remover(struct Fila *fComum, struct Fila *fPreferencial, int tipoSenha) {
 
     if (tipoSenha == 1) {
