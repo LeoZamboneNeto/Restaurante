@@ -4,10 +4,13 @@
 #include <time.h>
 #include <locale.h>
 
+#define MAX_PEDIDOS 100
+
 int opcao = -1;
 int senha = 1;
 int senhaPreferencial = 1;
 int tipoSenha = 0;
+int contadorPedidos = 0;
 
 struct Fila {
     int capacidade;
@@ -24,6 +27,21 @@ void criarFila(struct Fila *f, int c) {
     f->ultimo = -1;
     f->nItens = 0;
 }
+
+struct Produto {
+    char nome[50];
+    float valor;
+};
+
+struct NoProduto {
+    struct Produto produto;
+    struct NoProduto* prox;
+};
+
+struct Pedido {
+    int numero;
+    struct NoProduto* produtos;    // Lista encadeada de produtos
+};
 
 struct Prato {
     char nome[50];
@@ -70,32 +88,117 @@ void mostrarCardapio(struct Prato *pratos) {
     }
 }
 
-void selecionarPratos(struct Prato *pratos) {
+
+
+void adicionarPedido(struct Fila *f, struct Pedido historico[], int *contadorPedidos) {
+    if (*contadorPedidos < f->nItens) {
+        struct Pedido novoPedido;
+
+        // Limpar o buffer de entrada
+        while (getchar() != '\n');
+
+        novoPedido.numero = *contadorPedidos + 1; // Incrementa o número sequencial do pedido
+
+        // Preencha os detalhes do novo pedido, como adicionar produtos ao pedido
+        selecionarPratos(&novoPedido); // Função para selecionar os produtos para este pedido
+
+        historico[*contadorPedidos] = novoPedido;
+
+        printf("Pedido adicionado com sucesso!\n");
+    } else {
+        printf("O histórico de pedidos está cheio. Não é possível adicionar mais pedidos.\n");
+    }
+}
+
+void selecionarPratos(struct Prato *pratos, struct Pedido historico[], int *contadorPedidos) {
     int escolha;
     float subtotal = 0.0;
 
-    while (1) {
-        printf("Escolha o(s) prato(s) desejado(s) (digite 0 para voltar): ");
-        scanf("%d", &escolha);
+    printf("Escolha o(s) prato(s) desejado(s) (digite 0 para voltar): ");
+    scanf("%d", &escolha);
 
-        if (escolha == 0) {
-            break; // Sai do loop se a escolha for 0
-        }
+    // Verificação se a escolha é 0 (voltar)
+    if (escolha == 0) {
+        return;
+    }
 
+    // Lógica para associar os pratos ao pedido correto
+    int numPedido = *contadorPedidos; // Considerando que o contador representa o número do pedido atual
+    if (numPedido >= MAX_PEDIDOS) {
+        printf("Número máximo de pedidos atingido.\n");
+        return;
+    }
+
+    // Preenchimento dos detalhes do novo pedido
+    historico[numPedido].numero = numPedido + 1; // Incrementa o número sequencial do pedido
+    historico[numPedido].produtos = NULL; // Inicializa a lista de produtos do pedido
+
+    while (escolha != 0) {
         if (escolha < 1 || escolha > 15) {
             printf("Opção inválida!\n");
         } else {
             if ((pratos + escolha - 1)->quantidade > 0) {
                 printf("Prato escolhido: %s - R$%.2f\n", (pratos + escolha - 1)->nome, (pratos + escolha - 1)->preco);
                 subtotal += (pratos + escolha - 1)->preco;
+
+                // Adiciona o prato ao histórico de pedidos
+                adicionarPratoAoPedido(&historico[numPedido], (pratos + escolha - 1)->nome, (pratos + escolha - 1)->preco);
+
                 (pratos + escolha - 1)->quantidade--; // Reduz a quantidade disponível
                 printf("Subtotal: R$%.2f\n", subtotal);
             } else {
                 printf("Desculpe, o prato %s está esgotado!\n", (pratos + escolha - 1)->nome);
             }
         }
+
+        printf("Escolha o(s) prato(s) desejado(s) (digite 0 para voltar): ");
+        scanf("%d", &escolha);
+    }
+
+    (*contadorPedidos)++; // Atualiza o contador de pedidos
+}
+
+
+void consultarHistorico(struct Pedido historico[], int contadorPedidos) {
+    if (contadorPedidos == 0) {
+        printf("O histórico de pedidos está vazio.\n");
+    } else {
+        printf("Histórico de Pedidos:\n");
+        printf("%-15s%-30s%-10s\n", "Número", "Produto", "Valor");
+        for (int i = 0; i < contadorPedidos; i++) {
+            printf("Pedido %d:\n", historico[i].numero);
+            struct NoProduto* atual = historico[i].produtos;
+            while (atual != NULL) {
+                printf("%-15d%-30s%-10.2f\n", historico[i].numero, atual->produto.nome, atual->produto.valor);
+                atual = atual->prox;
+            }
+            printf("\n");  // Adiciona uma linha em branco após imprimir os produtos do pedido
+        }
     }
 }
+
+void adicionarPratoAoPedido(struct Pedido* pedido, const char* nome, float valor) {
+    struct NoProduto* novoProduto = (struct NoProduto*)malloc(sizeof(struct NoProduto));
+    if (novoProduto == NULL) {
+        printf("Erro ao alocar memória.\n");
+        return;
+    }
+    strcpy(novoProduto->produto.nome, nome);
+    novoProduto->produto.valor = valor;
+    novoProduto->prox = NULL;
+
+    if (pedido->produtos == NULL) {
+        pedido->produtos = novoProduto;
+    } else {
+        struct NoProduto* atual = pedido->produtos;
+        while (atual->prox != NULL) {
+            atual = atual->prox;
+        }
+        atual->prox = novoProduto;
+    }
+}
+
+
 
 void alterarQuantidadePrato(struct Prato *pratos) {
     int escolha, novaQuantidade;
@@ -122,6 +225,32 @@ void alterarQuantidadePrato(struct Prato *pratos) {
 
 void liberarFila(struct Fila *f) {
     free(f->dados);
+}
+
+void salvarHistorico(struct Pedido historico[], int contadorPedidos) {
+    FILE *arquivo;
+    arquivo = fopen("historico_pedidos.txt", "w");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para escrita.\n");
+        return;
+    }
+
+    fprintf(arquivo, "Histórico de Pedidos:\n");
+    fprintf(arquivo, "%-15s%-30s%-10s\n", "Número", "Produto", "Valor");
+
+    for (int i = 0; i < contadorPedidos; i++) {
+        fprintf(arquivo, "Pedido %d:\n", historico[i].numero);
+
+        struct NoProduto* atual = historico[i].produtos;
+        while (atual != NULL) {
+            fprintf(arquivo, "%-15d%-30s%-10.2f\n", historico[i].numero, atual->produto.nome, atual->produto.valor);
+            atual = atual->prox;
+        }
+    }
+
+    fclose(arquivo);
+    printf("Histórico de pedidos salvo com sucesso no arquivo 'historico_pedidos.txt'.\n");
 }
 
 void adicionarCapacidade(struct Fila *f, int item) {
@@ -242,12 +371,17 @@ void menu() {
     printf("3 - Senha XXX Concluída\n");
     printf("4 - Cardápio\n");
     printf("5 - Alterar quantidade de prato\n");
+    printf("6 - Consultar Histórico\n");
     printf("0 - Sair\n\n");
     printf("Escolha uma opção: ");
 }
 
-void gerenciadorSenhas() {
+struct Pedido historico[MAX_PEDIDOS];
 
+void gerenciadorSenhas() {
+    struct Pedido historico[MAX_PEDIDOS]; // Declare o array antes do loop ou no escopo que a função pode acessar
+
+    struct Pedido novoPedido;
     struct Fila minhaFila;
     struct Fila minhaFilaPreferencial;
 
@@ -270,15 +404,17 @@ void gerenciadorSenhas() {
             }
 
             case 1: {
-                inserir(&minhaFila, senha);
-                printf("Senha %d, retirada com sucesso!\n\n", senha);
-                senha++;
-                mostrarFilas(&minhaFila, &minhaFilaPreferencial);
-                inicializarCardapio(pratosInicio);
-                mostrarCardapio(pratosInicio);
-                selecionarPratos(pratosInicio);
-                break;
-            }
+                 inserir(&minhaFila, senha);
+                 printf("Senha %d, retirada com sucesso!\n\n", senha);
+                 senha++;
+                 mostrarFilas(&minhaFila, &minhaFilaPreferencial);
+                 inicializarCardapio(pratosInicio);
+                 mostrarCardapio(pratosInicio);
+                 selecionarPratos(pratosInicio, historico, &contadorPedidos);
+                 adicionarPedido(&minhaFila, historico, &contadorPedidos);  // Passando o endereço do contador global
+                 break;
+}
+
 
             case 2: {
                 inserir(&minhaFilaPreferencial, senhaPreferencial);
@@ -287,8 +423,9 @@ void gerenciadorSenhas() {
                 mostrarFilas(&minhaFila, &minhaFilaPreferencial);
                 inicializarCardapio(pratosInicio);
                 mostrarCardapio(pratosInicio);
-                selecionarPratos(pratosInicio);
-                break;
+                selecionarPratos(pratosInicio, historico, &contadorPedidos);
+                adicionarPedido(&minhaFila, historico, &contadorPedidos);
+                 break;
             }
 
             case 3: {
@@ -305,13 +442,20 @@ void gerenciadorSenhas() {
             case 4: {
                 inicializarCardapio(pratosInicio);
                 mostrarCardapio(pratosInicio);
-                selecionarPratos(pratosInicio);
+                adicionarPedido(&minhaFila, historico, &contadorPedidos);
+
                 gerenciadorSenhas();
             }
 
              case 5: {
                 alterarQuantidadePrato(pratosInicio);
                 break;
+            }
+
+            case 6: {
+                consultarHistorico(historico, contadorPedidos);
+                break;
+
             }
 
 
@@ -323,9 +467,14 @@ void gerenciadorSenhas() {
 }
 
 int main() {
-     setlocale(LC_ALL, "Portuguese");
-
+    setlocale(LC_ALL, "Portuguese");
 
     gerenciadorSenhas();
+
+    // Salvar histórico ao sair do programa
+  //  selecionarPratos(pratosInicio, 15, &historico[contadorPedidos]);
+
+
     return 0;
 }
+
